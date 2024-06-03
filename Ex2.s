@@ -51,8 +51,6 @@ lengthLoop:
 lengthExit:
   jr $ra                 # Return to caller
 
-# ... rest of the code ...
-
 arraySort:
   add $t0, $zero, $zero  # Initialize counter1
 
