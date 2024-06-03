@@ -10,91 +10,103 @@ answer: .asciiz "\nThe second largest element is: "
 .globl main
 
 main:
-    # Set up the stack frame
-    addi $sp, $sp, -4      # Adjust stack pointer
-    sw $ra, 0($sp)         # Save return address
+    # Stack frame setup
+    addi $sp, $sp, -4      # Decrease stack pointer for new frame
+    sw $ra, 0($sp)         # Store return address on stack
 
-    # Call arrayLength
-    la $a0, Array     # Load the address of the array into $a0
-    jal arrayLength     # Call the arrayLength subroutine
+    # Call subroutine to get array length
+    la $a0, Array     # Set array address as argument
+    jal arrayLength     # Jump to arrayLength subroutine
 
-    # Call arraySort
-    la $a0, Array     # Load the address of the array into $a0
-    move $a1, $v0          # Move the length to $a1
-    jal arraySort               # Call the arraySort subroutine
+    # Call subroutine to sort the array
+    la $a0, Array     # Set array address as argument
+    move $a1, $v0     # Set array length as argument
+    jal arraySort     # Jump to arraySort subroutine
 
-    # Print sorted array
-    la $a0, Array     # Load the address of the array into $a0
-    move $a1, $v0          # Move the length to $a1
-    jal printSortedArray         # Call the printSortedArray subroutine
+    # Call subroutine to print sorted array
+    la $a0, Array     # Set array address as argument
+    move $a1, $v0     # Set array length as argument
+    jal printSortedArray     # Jump to printSortedArray subroutine
 
     # Print the second largest element
-    la $a0, answer      # Load the message into $a0
-    li $v0, 4              # Syscall code for print string
-    syscall
+    la $a0, answer    # Set message as argument
+    li $v0, 4         # Set syscall code for print string
+    syscall           # Execute syscall
 
-    la $t0, Array     # Load the address of the array into $t0
-    lwc1 $f12, 4($t0)      # Load the second element of the array into $f12
-    li $v0, 2              # Syscall code for print float
-    syscall                # Print the second element
+    la $t0, Array     # Set array address as argument
+    lwc1 $f12, 4($t0) # Load second element of array into $f12
+    li $v0, 2         # Set syscall code for print float
+    syscall           # Execute syscall
 
-    # Clean up the stack
-    lw $ra, 0($sp)         # Restore return address
-    addi $sp, $sp, 4       # Restore stack pointer
+    # Stack frame cleanup
+    lw $ra, 0($sp)    # Restore return address from stack
+    addi $sp, $sp, 4  # Increase stack pointer to previous frame
 
     # Exit program
-    li $v0, 10             # Exit syscall code
-    syscall
+    li $v0, 10        # Set syscall code for exit
+    syscall           # Execute syscall
 
 arrayLength:
-    li $v0, 0              # Initialize length counter to 0
-    li $t0, 0              # Initialize index to 0
+    # Initialize length counter and index
+    li $v0, 0
+    li $t0, 0
 lengthLoop:
-    mul $t1, $t0, 4        # Calculate array index
-    add $t1, $t1, $a0      # Get array address
-    lwc1 $f1, 0($t1)       # Load array value (float)
-    c.eq.s $f1, $f0        # Compare with 0.0
-    bc1t lengthExit              # Exit lengthLoop if value is 0.0
-    addi $t0, $t0, 1       # Increment index
-    addi $v0, $v0, 1       # Increment length counter
-    j lengthLoop                 # Repeat lengthLoop
+    # Calculate array index and get array address
+    mul $t1, $t0, 4
+    add $t1, $t1, $a0
+    lwc1 $f1, 0($t1)  # Load array value
+    c.eq.s $f1, $f0   # Compare array value with 0.0
+    bc1t lengthExit   # If array value is 0.0, exit loop
+    addi $t0, $t0, 1  # Increment index
+    addi $v0, $v0, 1  # Increment length counter
+    j lengthLoop      # Repeat loop
 lengthExit:
-    jr $ra                 # Return from function
+    jr $ra            # Return from subroutine
 
 arraySort:
-    add $t0, $zero, $zero  # Initialize counter1 (i) to 0
+    # Initialize counters
+    add $t0, $zero, $zero
 outerLoop:
-    addi $t0, $t0, 1       # Increment i
-    bgt $t0, $a1, endOuterLoop # Break if i >= size
-    add $t1, $a1, $zero    # Initialize counter2 (size)
+    # Increment counter and check if it's greater than or equal to size
+    addi $t0, $t0, 1
+    bgt $t0, $a1, endOuterLoop
+    add $t1, $a1, $zero
 innerLoop:
-    bge $t0, $t1, outerLoop    # Break if j <= i
-    addi $t1, $t1, -1      # Decrement j
-    mul $t4, $t1, 4        # Calculate array[j] index
-    addi $t3, $t4, -4      # Calculate array[j-1] index
-    add $t7, $t4, $a0      # Get address of array[j]
-    add $t8, $t3, $a0      # Get address of array[j-1]
-    lwc1 $f5, 0($t7)       # Load array[j]
-    lwc1 $f6, 0($t8)       # Load array[j-1]
-    c.le.s $f5, $f6        # Compare array[j] <= array[j-1]
-    bc1t innerLoop             # Continue if array[j] <= array[j-1]
-    swc1 $f5, 0($t8)       # Swap array[j] and array[j-1]
+    # Check if counter is less than or equal to size
+    bge $t0, $t1, outerLoop
+    addi $t1, $t1, -1  # Decrement counter
+    # Calculate array indices and get array addresses
+    mul $t4, $t1, 4
+    addi $t3, $t4, -4
+    add $t7, $t4, $a0
+    add $t8, $t3, $a0
+    # Load array values and compare them
+    lwc1 $f5, 0($t7)
+    lwc1 $f6, 0($t8)
+    c.le.s $f5, $f6
+    bc1t innerLoop     # If array[j] <= array[j-1], continue loop
+    # Swap array values
+    swc1 $f5, 0($t8)
     swc1 $f6, 0($t7)
-j innerLoop                # Repeat innerLoop
+    j innerLoop        # Repeat loop
 endOuterLoop:
-    jr $ra                 # Return from function
+    jr $ra             # Return from subroutine
 
 printSortedArray:
-    li $t1, 0              # Initialize index
+    # Initialize index
+    li $t1, 0
     la $t0, Array
 printLoop:
-    lwc1 $f12, 0($t0)      # Load array element (float)
-    li $v0, 2              # Syscall code for print float
-    syscall                # Print element
+    # Load array element and print it
+    lwc1 $f12, 0($t0)
+    li $v0, 2
+    syscall
+    # Print line break
     li $v0, 4
-    la $a0, lineBreak      # Load line break string
-    syscall                # Print line break
-    addi $t0, $t0, 4       # Move to next element
-    addi $t1, $t1, 1       # Increment index
-    blt $t1, $a1, printLoop# Repeat until all elements printed
-    jr $ra                 # Return from function
+    la $a0, lineBreak
+    syscall
+    # Move to next element and increment index
+    addi $t0, $t0, 4
+    addi $t1, $t1, 1
+    blt $t1, $a1, printLoop  # Repeat until all elements are printed
+    jr $ra                   # Return from subroutine
