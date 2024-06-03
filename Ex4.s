@@ -2,9 +2,7 @@
 
 .data
 Array: .float 43.01, 34.06, 21208.09, 78.9, 64.98, 2126.1, 643.2, 451.4, 423.4, 45.5, 566.0, 0.0
-lineBreak: .asciiz "\n"
-space: .asciiz " "
-answer: .asciiz "\nThe second largest element is: "
+answer: .asciiz "The second largest element is: "
 
 .text
 .globl main
